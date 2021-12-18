@@ -1,5 +1,6 @@
 var child_process = require('child_process');
 var util = require('util');
+var glob = require('glob');
 
 module.exports = function(grunt) {
   'use strict';
@@ -200,7 +201,20 @@ module.exports = function(grunt) {
           '-o',  outfile,
           '-Inative/ed25519/nacl_includes -Inative/ed25519 -Inative/ed25519/sha512',
           '-s', "EXPORTED_FUNCTIONS=\"[" + exported_functions.join(',') + "]\""];
+      var list_src_files = this.data.src_files;
+      var res = [];
+      for (var i = 0; i < list_src_files.length; i++) {
+        var src_file = list_src_files[i];
+        if (src_file.includes('*')) {
+          res.push(glob.sync(src_file));
+        } else {
+          res.push([src_file]);
+        }
+      }
+      res = res.flat();
+      this.data.src_files = res.join(" ");
       var command = [].concat('emcc', this.data.src_files, flags).join(' ');
+      console.log(command);
       grunt.log.writeln('Compiling via emscripten to ' + outfile);
 
       var exitCode = 0;
